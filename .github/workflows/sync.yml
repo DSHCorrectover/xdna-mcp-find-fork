@@ -39,10 +39,11 @@ jobs:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           GH_ENRICHMENT_TOKEN: ${{ secrets.GH_ENRICHMENT_TOKEN }}
           # The Sep 14 run averaged about 1.7s per normalized repository over
-          # its metadata, README, and contributor requests. Cap the row batch
-          # at 300: even if every row is a distinct repository at 1.8s each,
-          # the 15m stage retains six minutes for slower responses/retries.
-          GH_ENRICHMENT_LIMIT: 300
+          # its metadata, README, and contributor requests. The 300-row cap
+          # still tripped the GitHub secondary rate limit under the current
+          # REST budget, so the batch is bounded at 150 rows (≈4.5m worst case)
+          # leaving the bulk of the 15m stage for slower responses/retries.
+          GH_ENRICHMENT_LIMIT: 150
           GH_ENRICHMENT_STAGE_TIMEOUT_MS: 900000
       - name: Ensure sync ledger is terminal
         if: ${{ always() && !cancelled() && steps.sync_start.outputs.ts != '' }}
@@ -119,6 +120,13 @@ jobs:
             # changed. Preserve warm caches and let the seven-day ISR window
             # refresh safely rather than issuing a global purge.
             echo "::warning::Changed-slug discovery failed; skipped cache invalidation and retained time-based refresh."
+            exit 0
+          fi
+          if [ -z "${REVALIDATE_TOKEN}" ]; then
+            # Missing on-demand revalidation secret must never turn a successful
+            # data sync into a failed run (curl -sf would exit 22 on 401). The
+            # seven-day ISR window still refreshes pages safely.
+            echo "::warning::REVALIDATE_TOKEN is not set; skipped targeted cache invalidation and retained time-based refresh."
             exit 0
           fi
           count=$(jq 'length' "$SLUGS_FILE")
