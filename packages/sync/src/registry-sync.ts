@@ -171,10 +171,13 @@ export async function syncFromRegistry(
           package_name: packageName,
           package_type: packageType,
           package_url: packageUrl,
-          has_tools: Boolean(capabilities.tools),
+          // has_tools / tool_count are HARVEST columns, owned solely by the live
+          // runtime harvest (tool_harvest_status). They must never be overwritten
+          // from the registry capabilities declaration, or the false-zero guard
+          // (block_false_zero) rejects the whole nightly sync. Capability flags
+          // still flow through has_resources / has_prompts below.
           has_resources: Boolean(capabilities.resources),
           has_prompts: Boolean(capabilities.prompts),
-          tool_count: Array.isArray(capabilities.tools) ? capabilities.tools.length : 0,
           github_url: githubUrl,
           is_official: isOfficial(packageName),
           registry_status: (() => {

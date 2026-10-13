@@ -83,10 +83,8 @@ interface CommunityRecord {
   package_type: string | null;
   package_url: null;
   category?: string;
-  has_tools: boolean;
   has_resources: boolean;
   has_prompts: boolean;
-  tool_count: number;
   github_url: string;
   is_official: boolean;
   registry_status: 'active';
@@ -188,10 +186,9 @@ function toRecord(entry: SubmissionEntry, file: string): CommunityRecord {
     package_name: String(entry.package_name),
     package_type: entry.package_type ?? null,
     package_url: null,
-    has_tools: false,
+    // has_tools / tool_count omitted: harvest-owned columns (see registry-sync).
     has_resources: false,
     has_prompts: false,
-    tool_count: 0,
     github_url: githubUrl,
     is_official: false,
     registry_status: 'active',
