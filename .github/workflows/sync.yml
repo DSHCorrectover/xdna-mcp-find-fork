@@ -14,7 +14,7 @@ concurrency:
 jobs:
   sync:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 58
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
@@ -33,7 +33,7 @@ jobs:
         id: sync
         # Leave enough of the job budget for ledger repair, cache invalidation,
         # and IndexNow even if the process itself stalls.
-        run: timeout --signal=TERM --kill-after=30s 24m pnpm --filter @mcpfind/sync run start
+        run: timeout --signal=TERM --kill-after=30s 50m pnpm --filter @mcpfind/sync run start
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
